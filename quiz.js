@@ -49,7 +49,7 @@ var Quiz = (function () {
     request.send();
     request = null;
 
-  }
+  };
 
 
   // build quiz
@@ -76,17 +76,29 @@ var Quiz = (function () {
         }
       }
 
+      console.log('Questions: ' + settings.questionIds);
+
       _getQuestion();
     });
 
-  }
+    score = 0;
+
+  };
 
 
   // get question
   var _getQuestion = function () {
 
+    // grab a question
     var question = questions[Math.floor(Math.random() * settings.questionIds.length)];
 
+    // remove the current question from the questions array
+    var i = settings.questionIds.indexOf(question._id);
+    settings.questionIds.splice(i, 1);
+
+    console.log('Remaining questions: ' + settings.questionIds);
+
+    // build up the question
     var quiz = document.getElementById('quiz'),
         list = document.getElementById('answers'),
         title = quiz.getElementsByTagName('h2'),
@@ -94,6 +106,7 @@ var Quiz = (function () {
 
     list.innerHTML = "";
 
+    // add the answers
     for(var i = 0; i < title.length; i++) {
       title[i].innerHTML = question.question;
     }
@@ -104,9 +117,28 @@ var Quiz = (function () {
 
       el.appendChild(text);
       list.appendChild(el);
+
+      el.onclick = _chooseAnswer;
+    }
+    
+  };
+
+
+  var _chooseAnswer = function () {
+    var answers = document.querySelectorAll('#answers li');
+    for(var i = 0; i < answers.length; i++) {
+      answers[i].dataset.state = '';
     }
 
-  }
+    this.dataset.state = 'active';
+  };
+
+
+  // increment score
+  var _incrementScore = function () {
+    score++;
+    console.log('Score: ' + score);
+  };
 
 
   // kick it all off

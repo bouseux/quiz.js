@@ -16,6 +16,7 @@ var Quiz = (function () {
   }
 
   var questions, score;
+  var wrongQuestions = [];
 
   // template helper
   var _getFileContents = function(template, callback) {
@@ -41,7 +42,7 @@ var Quiz = (function () {
         if (this.status >= 200 && this.status < 400) {
           callback(this.responseText);
         } else {
-          console.log('Error parsing JSON file.');
+          console.error('Error parsing JSON file.');
         }
       }
     };
@@ -58,12 +59,7 @@ var Quiz = (function () {
     // grab the template file
     _getFileContents(settings.questionsTemplate, function (response) {
       document.getElementById(settings.container).innerHTML += response;
-
-      // add click events to next and reset buttons
-      var next = document.getElementById('next');
-      next.addEventListener("click", function() {
-        _getQuestion();
-      });
+      document.querySelector('#total').innerHTML = settings.numberOfQuestions;
     });
 
     // parse the questions
@@ -106,6 +102,10 @@ var Quiz = (function () {
 
     list.innerHTML = "";
 
+    // change the question number
+    var current = document.querySelector('#current');
+    current.innerHTML = +current.innerHTML + 1;
+
     // add the answers
     for(var i = 0; i < title.length; i++) {
       title[i].innerHTML = question.question;
@@ -116,21 +116,58 @@ var Quiz = (function () {
           text = document.createTextNode(answers[i].answer);
 
       el.appendChild(text);
+      el.dataset.id = [i];
       list.appendChild(el);
 
       el.onclick = _chooseAnswer;
     }
-    
+
+    var old_element = document.getElementById("next");
+    var new_element = old_element.cloneNode(true);
+    old_element.parentNode.replaceChild(new_element, old_element);
+
+    // add click events to next and reset buttons
+    var next = document.getElementById('next');
+    next.addEventListener('click', function() {
+
+      var quiz = document.getElementById('quiz'),
+          chosenAnswer = document.querySelector('[data-state="active"]');
+
+      if (quiz.contains(chosenAnswer)) {
+        _getQuestion();
+        _checkAnswer(question, chosenAnswer);
+      } else {
+        alert('Please select an answer.');
+      }
+    });
+
   };
 
 
   var _chooseAnswer = function () {
+
     var answers = document.querySelectorAll('#answers li');
     for(var i = 0; i < answers.length; i++) {
       answers[i].dataset.state = '';
     }
 
     this.dataset.state = 'active';
+
+  };
+
+
+  var _checkAnswer = function (question, userAnswer) {
+
+    var correctAnswer = question.correct,
+        userAnswer = userAnswer.dataset.id;
+
+    console.log(correctAnswer);
+    console.log(userAnswer);
+
+    if(correctAnswer == userAnswer)
+      _incrementScore();
+    else
+      wrongQuestions.push(question._id); console.log(wrongQuestions);
   };
 
 
